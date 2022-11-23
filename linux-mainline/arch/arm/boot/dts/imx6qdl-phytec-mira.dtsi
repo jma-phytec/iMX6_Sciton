@@ -126,6 +126,20 @@
 	clock-frequency = <100000>;
 	status = "disabled";
 
+	pca9534: gpio-expander@26 {
+		compatible = "nxp,pca9534";
+		reg = <0x26>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_pca9534>;
+		interrupt-parent = <&gpio5>;
+		interrupts = <13 IRQ_TYPE_LEVEL_LOW>;
+		interrupt-controller;
+		#interrupt-cells = <2>;
+	};
+
+
 };
 
 &i2c2 {
@@ -276,6 +290,12 @@
 			MX6QDL_PAD_KEY_ROW3__GPIO4_IO13		0x4001b8b1
 			MX6QDL_PAD_KEY_COL3__GPIO4_IO12		0x4001b8b1
 		>;
+	};
+
+	pinctrl_pca9534: pca9534grp {
+		fsl,pins = <
+			MX6QDL_PAD_DISP0_DAT19__GPIO5_IO13	0x17059
+	   >;
 	};
 
 	pinctrl_pwm1: pwm1grp {
