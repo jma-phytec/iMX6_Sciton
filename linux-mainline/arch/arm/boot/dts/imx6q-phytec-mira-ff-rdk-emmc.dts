@@ -27,10 +27,6 @@
 	status = "okay";
 };
 
-&dim_gpio_leds {
-	status = "okay";
-};
-
 &fec {
 	status = "okay";
 };
@@ -51,15 +47,7 @@
 	status = "okay";
 };
 
-&leddim {
-	status = "okay";
-};
-
 &m25p80 {
-	status = "okay";
-};
-
-&pcie {
 	status = "okay";
 };
 
