@@ -6,7 +6,6 @@
 
 / {
 	aliases {
-		rtc0 = &i2c_rtc;
 	};
 
 	backlight: backlight {
@@ -127,15 +126,6 @@
 	clock-frequency = <100000>;
 	status = "disabled";
 
-	i2c_rtc: rtc@68 {
-		compatible = "microcrystal,rv4162";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_rtc_int>;
-		reg = <0x68>;
-		interrupt-parent = <&gpio7>;
-		interrupts = <8 IRQ_TYPE_LEVEL_HIGH>;
-		status = "disabled";
-	};
 };
 
 &i2c2 {
@@ -279,12 +269,6 @@
 	pinctrl_pwm1: pwm1grp {
 		fsl,pins = <
 			MX6QDL_PAD_GPIO_9__PWM1_OUT		0x1b0b1
-		>;
-	};
-
-	pinctrl_rtc_int: rtcintgrp {
-		fsl,pins = <
-			MX6QDL_PAD_SD3_RST__GPIO7_IO08		0x1b0b0
 		>;
 	};
 
