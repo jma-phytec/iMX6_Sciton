@@ -40,6 +40,7 @@
 	fsl,ldo-bypass;
 };
 
+/*
 &ecspi1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_ecspi1>;
@@ -53,6 +54,7 @@
 		status = "disabled";
 	};
 };
+*/
 
 &ecspi2 {
 	pinctrl-names = "default";
@@ -365,7 +367,7 @@
 			MX6QDL_PAD_GPIO_5__GPIO1_IO05	0x4001b8b1
 		>;
 	};
-
+/*
 	pinctrl_ecspi1: ecspi1grp {
 		fsl,pins = <
 			MX6QDL_PAD_EIM_D16__ECSPI1_SCLK		0x100b1
@@ -374,7 +376,7 @@
 			MX6QDL_PAD_EIM_D19__GPIO3_IO19		0x1b0b0
 		>;
 	};
-
+*/
 	pinctrl_ecspi2: ecspi2grp {
 		fsl,pins = <
 			MX6QDL_PAD_EIM_CS0__ECSPI2_SCLK 0x100b1

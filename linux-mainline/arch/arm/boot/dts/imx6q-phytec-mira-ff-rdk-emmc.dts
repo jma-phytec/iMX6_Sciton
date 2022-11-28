@@ -42,11 +42,11 @@
 &i2c2 {
 	status = "okay";
 };
-
+/*
 &m25p80 {
 	status = "okay";
 };
-
+*/
 &uart1 {
 	status = "okay";
 };
