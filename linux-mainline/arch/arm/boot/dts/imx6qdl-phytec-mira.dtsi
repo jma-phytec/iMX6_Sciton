@@ -72,8 +72,8 @@
 		regulator-name = "usb_h1_vbus";
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
-		gpio = <&gpio2 18 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
+		gpio = <&gpio2 18 GPIO_ACTIVE_LOW>;
+		enable-active-low;
 	};
 
 	reg_usbotg_vbus: usbotg-vbus {
@@ -83,8 +83,8 @@
 		regulator-name = "usb_otg_vbus";
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
-		gpio = <&gpio2 19 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
+		gpio = <&gpio2 19 GPIO_ACTIVE_LOW>;
+		enable-active-low;
 	};
 
 	panel {
