@@ -1,0 +1,144 @@
+#!/bin/sh
+# This script is a init script for our bsp. It resides in the bsp release specific folder
+# this is the soc specific init script. It assumes that you have only one soc layer
+# which holds all your machines.
+PHYLINUX_API_VERSION="2"
+
+# Try to find ROOTDIR from arg0 of shell process.
+DIR="`dirname $(readlink -f $0)`"
+
+# Try to find ROOTDIR of the Yocto BSP. Walk up the directory tree until we
+# find the sources/meta-phytec or .repo directory. Returns the empty string as
+# an error code.
+find_root_dir() {
+	dir=$(readlink -f "$1")  # should return an absoulte path
+	while [ ! "$dir" = "/" ]; do
+		if [ -d "$dir/.repo" ]; then
+		# or [ -d "$dir/sources/meta-phytec" ];
+			echo $dir;
+			return;
+		fi
+		dir=$(dirname "$dir")
+	done
+	# If anchor directory isn't found, function returns the empty strings
+	# as an error code.
+}
+
+ROOTDIR=$(find_root_dir "$DIR")
+if [ "$ROOTDIR" = "" ]; then
+	echo >&2 "ERROR: Cannot find root directory of the Yocto BSP."
+        echo >&2 "Is '$DIR' in a checkout of a BSP? Aborting..."
+	exit 1;
+fi
+
+# copy release notes to rootdir, if they are present in phy2octo
+REPO_MANIFEST="${ROOTDIR}/.repo/manifest.xml"
+if [ -L ${REPO_MANIFEST} ]; then
+        # file is a symbolic link
+	RELEASE_UID=$(sed -n 's:.*release_uid="\([^"]*\).*:\1:p' ${REPO_MANIFEST})
+else
+        # file is a regular file
+        INC_MANIFEST=`grep -o '".*\.xml"' ${REPO_MANIFEST} | sed 's/"//g'`
+        RELEASE_UID=$(sed -n 's:.*release_uid="\([^"]*\).*:\1:p' \
+		${ROOTDIR}/.repo/manifests/${INC_MANIFEST})
+fi
+RELEASE_NOTES="${ROOTDIR}/.repo/manifests/releasenotes/${RELEASE_UID}"
+if [ -e ${RELEASE_NOTES} ]; then
+	install -pm 0644 ${RELEASE_NOTES} ${ROOTDIR}/ReleaseNotes
+fi
+
+# Folders and Readme
+PHYTEC_DIR="${ROOTDIR}/sources/meta-phytec"
+install -m 0644 ${PHYTEC_DIR}/conf/doc/HOWTO ${ROOTDIR}
+
+# Setup template directory. Allow caller to overwrite default TEMPLATECONF.
+if [ -z "${TEMPLATECONF}" ]; then
+	export TEMPLATECONF="${ROOTDIR}/tools/templateconf"
+	copy_file_by_priority=${PHYTEC_DIR}/scripts/copy_file_by_priority.py
+	install -d ${TEMPLATECONF}
+	# copy new NXP EULA to meta-freescale in case of freescale-release
+	if [ -e "${ROOTDIR}/sources/meta-imx" ] && [ -e "${ROOTDIR}/sources/meta-freescale" ]; then
+	       cp ${ROOTDIR}/sources/meta-imx/EULA.txt ${ROOTDIR}/sources/meta-freescale/EULA
+	fi
+	$copy_file_by_priority conf/bblayers.conf.sample ${TEMPLATECONF}
+	$copy_file_by_priority conf/local.conf.sample ${TEMPLATECONF}
+	$copy_file_by_priority conf/conf-notes.txt ${TEMPLATECONF}
+fi
+
+# Init a build directory if we dont have one.
+# NOTE: Since the script 'oe-buildenv-internal' will use the current working
+# directory as the base for the build directory, we set the build directory
+# explicitly as argument here. So the 'init' script's actions don't depend on
+# the current working directory of the caller. This method works for dash, too.
+if [ -z "${1}" ]; then
+	set -- "${ROOTDIR}/build"
+else
+	set -- "${ROOTDIR}/${1}"
+fi
+
+if [ -f "${ROOTDIR}/build/conf/bblayers.conf" ] || [ -f "${ROOTDIR}/${1}/conf/bblayers.conf" ]; then
+        echo ""
+        echo "There already exists an initiated BSP. It could lead to errors in the BSP configuration"
+        echo "process if you continue from here. At least you have to check your build directory"
+        echo "for settings in bblayers.conf and local.conf, which will not be handled correctly in"
+        echo "all cases. It is advisable to start from an empty directory of call:"
+        echo "$ ./phyLinux clean"
+        echo "or to delete the complete build directory:"
+        echo "$ rm -rf ./build"
+        while true; do
+                read -p "Do you really want to continue from here? [y/n] " yn
+                case $yn in
+                        [Yy]* ) break;;
+                        [Nn]* ) exit;;
+                        * ) echo "Please answer [y]es or [n]o.";;
+                esac
+        done
+fi
+
+get_init_env_dir() {
+	if [ -e "${ROOTDIR}/sources/poky" ]; then
+		echo sources/poky
+	elif [ -e "${ROOTDIR}/sources/oe-core" ]; then
+		echo sources/oe-core
+	else
+		echo >&2 "poky/oe-core build environment script not found."
+		exit 1
+	fi
+}
+
+# source poky/oe-core build environment script.
+cd ${ROOTDIR}/$(get_init_env_dir)
+. ${ROOTDIR}/$(get_init_env_dir)/oe-init-build-env > /dev/null
+
+${PHYTEC_DIR}/scripts/init_bblayers.py
+${PHYTEC_DIR}/scripts/copy_site_conf.py
+${PHYTEC_DIR}/scripts/init_machine.py
+
+container_usage() {
+	CONTAINER=$(sed -n 's:.*build_container="\([^"]*\).*:\1:p' ${ROOTDIR}/.repo/manifest.xml)
+	if [ ! -z "${CONTAINER}" ]; then
+		echo "A docker image can also be used as your build environment.\n"
+		echo "Set up your shell environment with:\n"
+		echo "    $ docker run --rm -it -v \${PWD}:/\${PWD} ${CONTAINER} --workdir=\${PWD} bash\n"
+		echo "Or start a build with:\n"
+		echo "    $ docker run --rm -it -v \${PWD}:/\${PWD} ${CONTAINER} --workdir=\${PWD} \\"
+		echo "      bash -c '. sources/poky/oe-init-build-env && bitbake phytec-headless-image'"
+		echo ""
+		echo ""
+	fi
+}
+
+echo ""
+echo "Before you start your work, please check your build/conf/local.conf for"
+echo "host specific configuration. Check the documentation especially for:"
+echo "   - proxy settings"
+echo "   - DL_DIR"
+echo "   - SSTATE_DIR"
+echo ""
+echo "To set up your shell environment for some Yocto work, you have to type this"
+echo "command, including the 'dot':"
+echo ""
+echo "    $ . $(get_init_env_dir)/oe-init-build-env"
+echo ""
+echo ""
+container_usage

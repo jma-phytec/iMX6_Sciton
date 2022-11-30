@@ -1,0 +1,25 @@
+--- a/Rules.make
++++ b/Rules.make
+@@ -1,12 +1,5 @@
+-
+-CC = $(CROSS_COMPILE)gcc
+-LD = $(CROSS_COMPILE)ld
+-HOSTCC = gcc
+-
+ IFLAGS = -I$(TOPDIR)/include
+-#DFLAGS = -g
+-OFLAGS = -O3 -fomit-frame-pointer
+-CFLAGS = -Wall -Werror $(IFLAGS) $(DFLAGS) $(OFLAGS)
++CFLAGS += $(IFLAGS)
+ 
+ SRCS += $(wildcard *.c)
+ OBJS += $(subst .c,.o,$(SRCS))
+@@ -24,7 +17,7 @@ ifdef SUBDIRS
+ endif
+ 
+ $(TARGET):	$(OBJS)
+-		$(CC) -o $(TARGET) $(filter $(OBJS), $^) $(LIBS)
++		$(CC) -o $(TARGET) $(LDFLAGS) $(filter $(OBJS), $^) $(LIBS)
+ 
+ $(O_TARGET):	$(OBJS)
+ 		$(LD) -r -o $(O_TARGET) $(filter $(OBJS), $^)
