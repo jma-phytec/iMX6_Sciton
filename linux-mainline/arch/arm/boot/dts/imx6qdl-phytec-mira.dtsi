@@ -88,19 +88,22 @@
 	};
 
 	panel {
-		compatible = "auo,g104sn02";
+		compatible = "kyo,tcg121xglp";
 		pinctrl-names = "default";
 		pinctrl-0 = <&pinctrl_panel_en>;
 		power-supply = <&reg_panel>;
 		enable-gpios = <&gpio2 28 GPIO_ACTIVE_LOW>;
 		backlight = <&backlight>;
+		status = "okay";
 
-		port {
+		port@0 {
+			reg = <0>;
 			panel_in: endpoint {
 				remote-endpoint = <&lvds0_out>;
 			};
 		};
 	};
+
 };
 
 &can1 {
@@ -157,8 +160,8 @@
 
 	lvds-channel@0 {
 		fsl,data-mapping = "spwg";
-		fsl,data-width = <18>;
-		status = "disabled";
+		fsl,data-width = <24>;
+		status = "okay";
 
 		port@4 {
 			reg = <4>;
