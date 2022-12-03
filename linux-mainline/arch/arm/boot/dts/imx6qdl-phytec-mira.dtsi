@@ -230,7 +230,25 @@
 	status = "disabled";
 };
 
+&gpio3 {
+    pinctrl-names = "default";
+    pinctrl-0 = <&pinctrl_gpio_lvds_bl_en>;
+
+    sysstat@22 {
+        gpio-hog;
+        gpios = <22 GPIO_ACTIVE_HIGH>;
+        output-high;
+        line-name = "LVDS_BL_EN";
+    };
+};
+
 &iomuxc {
+    pinctrl_gpio_lvds_bl_en: gpiostatgrp {
+        fsl,pins = <
+            MX6QDL_PAD_EIM_D22__GPIO3_IO22      0x130b0
+        >;
+    };
+
 	pinctrl_csi_des0: csides0grp {
 		fsl,pins = <
 			MX6QDL_PAD_CSI0_DATA_EN__GPIO5_IO20	0x1b0b0
