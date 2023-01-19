@@ -1,0 +1,138 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Author: Petko Manolov <petko.manolov@konsulko.com>
+ */
+
+#include <dt-bindings/sound/fsl-imx-audmux.h>
+
+/ {
+	v_3v2: regulator-v-3v2 {
+		compatible = "regulator-fixed";
+		regulator-always-on;
+		regulator-max-microvolt = <3300000>;
+		regulator-min-microvolt = <3300000>;
+		regulator-name = "v_3v2";
+	};
+
+	vcc_1p8: regulator-vcc-1p8 {
+		compatible = "regulator-fixed";
+		regulator-always-on;
+		regulator-max-microvolt = <1800000>;
+		regulator-min-microvolt = <1800000>;
+		regulator-name = "vcc_1p8";
+	};
+
+
+
+	audio: sound-sgtl5000 {
+		compatible = "simple-audio-card";
+		// simple-audio-card,aux-devs = <&speaker_amp>;
+		simple-audio-card,name = "On-board Codec";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,bitclock-master = <&sound_codec>;
+		simple-audio-card,frame-master = <&sound_codec>;
+		simple-audio-card,widgets =
+			"Microphone", "Mic Jack",
+			"Headphone", "Headphone Jack";
+		simple-audio-card,routing =
+			"MIC_IN", "Mic Jack",
+			"Mic Jack", "Mic Bias",
+			"Headphone Jack", "HP_OUT";
+
+		sound_cpu: simple-audio-card,cpu {
+			sound-dai = <&ssi1>;
+		};
+
+		sound_codec: simple-audio-card,codec {
+			sound-dai = <&sgtl5000>;
+		};
+	};
+/*
+	speaker_amp: audio-amplifier {
+		compatible = "simple-audio-amplifier";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_amp>;
+		enable-gpios = <&gpio4 31 GPIO_ACTIVE_HIGH>;
+		sound-name-prefix = "Speaker Amp";
+	};
+*/
+};
+
+&audmux {
+	status = "okay";
+
+	ssi1 {
+		fsl,audmux-port = <0>;
+		fsl,port-config = <
+			(IMX_AUDMUX_V2_PTCR_SYN |
+			 IMX_AUDMUX_V2_PTCR_TFSEL(4) |
+			 IMX_AUDMUX_V2_PTCR_TCSEL(4) |
+			 IMX_AUDMUX_V2_PTCR_TFSDIR |
+			 IMX_AUDMUX_V2_PTCR_TCLKDIR)
+			 IMX_AUDMUX_V2_PDCR_RXDSEL(4)
+		>;
+	};
+
+	ssi2 {
+		fsl,audmux-port = <1>;
+		fsl,port-config = <
+			(IMX_AUDMUX_V2_PTCR_TFSDIR |
+			IMX_AUDMUX_V2_PTCR_TFSEL(4) |
+			IMX_AUDMUX_V2_PTCR_TCLKDIR |
+			IMX_AUDMUX_V2_PTCR_TCSEL(4))
+			IMX_AUDMUX_V2_PDCR_RXDSEL(4)
+		>;
+	};
+
+	pins5 {
+		fsl,audmux-port = <4>;
+		fsl,port-config = <
+			// 0x00000000
+			// IMX_AUDMUX_V2_PDCR_RXDSEL(1)
+			IMX_AUDMUX_V2_PTCR_SYN
+			IMX_AUDMUX_V2_PDCR_RXDSEL(0)
+		>;
+	};
+};
+
+&i2c1 {
+	sgtl5000: codec@a {
+		compatible = "fsl,sgtl5000";
+		#sound-dai-cells = <0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_sgtl5000>;
+		clocks = <&clks IMX6QDL_CLK_CKO>;
+		// clocks = <&clks IMX6QDL_CLK_CKO1>;
+		reg = <0x0a>;
+		VDDA-supply = <&v_3v2>;
+		VDDD-supply = <&vcc_1p8>;
+		VDDIO-supply = <&v_3v2>;
+	};
+};
+
+&iomuxc {
+	pinctrl_sgtl5000: pinctrl-sgtl5000 {
+		fsl,pins = <
+			MX6QDL_PAD_KEY_COL0__AUD5_TXC	0x130b0
+			MX6QDL_PAD_KEY_ROW0__AUD5_TXD	0x110b0
+			MX6QDL_PAD_KEY_COL1__AUD5_TXFS	0x130b0
+			MX6QDL_PAD_KEY_ROW1__AUD5_RXD	0x130b0
+			MX6QDL_PAD_GPIO_0__CCM_CLKO1	0x130b0
+		>;
+	};
+/*
+	pinctrl_amp: pinctrl-amp {
+		fsl,pins = <
+			MX6QDL_PAD_CSI0_DAT13__GPIO5_IO31	0x1b0b0
+		>;
+	};
+*/
+};
+
+&ssi1 {
+	status = "okay";
+};
+
+&ssi2 {
+	status = "okay";
+};
