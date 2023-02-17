@@ -12,6 +12,7 @@
 //#include "imx6qdl-phytec-mira-peb-av-02.dtsi"
 #include "imx6qdl-phytec-peb-wlbt-05.dtsi"
 //#include "imx6qdl-phytec-mira-phycam.dtsi"
+#include "imx6qdl-phytec-mira-sound.dtsi"
 
 / {
 	model = "PHYTEC phyBOARD-Mira Quad full featured with eMMC";
